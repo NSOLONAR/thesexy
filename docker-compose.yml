@@ -1,0 +1,90 @@
+version: '3.1'
+
+networks:
+    sexynet:
+      external: true
+
+services:
+  proxy:
+    # The official v2.0 Traefik docker image
+    image: traefik:v2.0
+    container_name: proxy
+    restart: always
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+    # this must be removed when complete
+      - --api.insecure=true
+      - --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/config/:/etc/traefik/
+    networks:
+      - sexynet
+    environment:
+      - TZ=Europe/Berlin
+    labels:
+      - "traefik.enable=true"
+# api
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.api.service=api@internal"
+# redirect http
+#      - "traefik.http.routers.anyhttp.entrypoints=web"
+#      - "traefik.http.routers.anyhttp.middlewares=redirecthttps@docker"
+#      - "traefik.http.routers.anyhttp.rule=HostRegexp(`{subdomain:[a-z0-9]+}.the.sexy`)"
+#      - "traefik.http.middlewares.redirecthttps.redirectscheme.scheme=https"
+  web:
+    image: php:apache
+    container_name: apachephp
+    restart: always
+    volumes:
+      - ./web/:/var/www/html/
+    networks:
+      - sexynet
+    environment:
+      - TZ=Europe/Berlin
+    labels:
+      - "traefik.http.routers.apachephp.rule=Host(`the.sexy`) || Host(`get.the.sexy`) || Host(`mail.the.sexy`)"
+      - "traefik.http.routers.apachephp.tls=true"
+      - "traefik.http.routers.apachephp.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.apachephp.tls.domains[0].main=the.sexy"
+      - "traefik.http.routers.apachephp.tls.domains[1].main=get.the.sexy"
+      - "traefik.http.routers.apachephp.tls.domains[2].main=mail.the.sexy"
+      - "traefik.enable=true"
+  mailserver:
+    image: docker.io/mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: h1
+    domainname: the.sexy
+    ports:
+      - "25:25"
+      - "143:143"
+      - "587:587"
+      - "993:993"
+    volumes:
+      - ./dms/mail-data/:/var/mail/
+      - ./dms/mail-state/:/var/mail-state/
+      - ./dms/mail-logs/:/var/log/mail/
+      - ./dms/config/:/tmp/docker-mailserver/
+      - ./traefik/ssl/:/tmp/ssl/
+    environment:
+      - TZ=Europe/Berlin
+      - ENABLE_SPAMASSASSIN=1
+      - SPAMASSASSIN_SPAM_TO_INBOX=1
+      - ENABLE_CLAMAV=1
+      - ENABLE_FAIL2BAN=0
+      - ENABLE_POSTGREY=1
+      - ENABLE_SASLAUTHD=0
+      - ONE_DIR=1
+      - DMS_DEBUG=0
+    cap_add:
+      - NET_ADMIN
+      - SYS_PTRACE
+    restart: always
