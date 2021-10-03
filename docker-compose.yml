@@ -13,7 +13,7 @@ services:
     # Enables the web UI and tells Traefik to listen to docker
     command:
     # this must be removed when complete
-      - --api.insecure=true
+#      - --api.insecure=true
       - --providers.docker
     ports:
       # The HTTP port
@@ -21,7 +21,7 @@ services:
       # The HTTPS port
       - "443:443"
       # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
+#      - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
@@ -36,13 +36,13 @@ services:
       - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
       - "traefik.http.routers.api.service=api@internal"
 # redirect http
-#      - "traefik.http.routers.anyhttp.entrypoints=web"
-#      - "traefik.http.routers.anyhttp.middlewares=redirecthttps@docker"
-#      - "traefik.http.routers.anyhttp.rule=HostRegexp(`{subdomain:[a-z0-9]+}.the.sexy`)"
-#      - "traefik.http.middlewares.redirecthttps.redirectscheme.scheme=https"
+      - "traefik.http.routers.anyhttp.entrypoints=web"
+      - "traefik.http.routers.anyhttp.middlewares=redirecthttps@docker"
+      - "traefik.http.routers.anyhttp.rule=HostRegexp(`{subdomain:[a-z0-9]+}.the.sexy`)"
+      - "traefik.http.middlewares.redirecthttps.redirectscheme.scheme=https"
   web:
     image: php:apache
-    container_name: apachephp
+    container_name: web
     restart: always
     volumes:
       - ./web/:/var/www/html/
@@ -58,9 +58,9 @@ services:
       - "traefik.http.routers.apachephp.tls.domains[1].main=get.the.sexy"
       - "traefik.http.routers.apachephp.tls.domains[2].main=mail.the.sexy"
       - "traefik.enable=true"
-  mailserver:
+  mail:
     image: docker.io/mailserver/docker-mailserver:latest
-    container_name: mailserver
+    container_name: mail
     hostname: h1
     domainname: the.sexy
     ports:
@@ -68,6 +68,7 @@ services:
       - "143:143"
       - "587:587"
       - "993:993"
+      - "4190:4190"
     volumes:
       - ./dms/mail-data/:/var/mail/
       - ./dms/mail-state/:/var/mail-state/

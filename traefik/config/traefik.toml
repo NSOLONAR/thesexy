@@ -155,7 +155,7 @@
 
 [certificatesResolvers.letsencrypt.acme]
 #  uncomment to use staging servers
-  caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+#  caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
   email = "nick.solonar@protonmail.ch"
   storage = "/etc/traefik/acme.json"
   [certificatesResolvers.letsencrypt.acme.httpChallenge]
