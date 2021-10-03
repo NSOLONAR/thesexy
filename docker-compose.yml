@@ -83,6 +83,7 @@ services:
       - ENABLE_FAIL2BAN=0
       - ENABLE_POSTGREY=1
       - ENABLE_SASLAUTHD=0
+      - SSL_TYPE=manual
       - ONE_DIR=1
       - DMS_DEBUG=0
     cap_add:
