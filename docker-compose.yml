@@ -74,7 +74,7 @@ services:
       - ./dms/mail-state/:/var/mail-state/
       - ./dms/mail-logs/:/var/log/mail/
       - ./dms/config/:/tmp/docker-mailserver/
-      - ./traefik/ssl/:/tmp/ssl/
+      - ./traefik/config/acme.json:/etc/letsencrypt/acme.json
     environment:
       - TZ=Europe/Berlin
       - ENABLE_SPAMASSASSIN=1
